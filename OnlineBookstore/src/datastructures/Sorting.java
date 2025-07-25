@@ -1,17 +1,43 @@
 package datastructures;
 
 import model.Book;
+import java.util.ArrayList;
 
 public class Sorting {
-    public static void insertionSort(Book[] books, int length) {
-        for (int i = 1; i < length; i++) {
-            Book key = books[i];
-            int j = i - 1;
-            while (j >= 0 && books[j].getTitle().compareToIgnoreCase(key.getTitle()) > 0) {
-                books[j + 1] = books[j];
-                j--;
-            }
-            books[j + 1] = key;
+
+    public enum SortType {
+    }
+
+    public static void quickSort(ArrayList<Book> books) {
+        quickSortHelper(books, 0, books.size() - 1);
+    }
+
+    private static void quickSortHelper(ArrayList<Book> books, int low, int high) {
+        if (low < high) {
+            int pi = partition(books, low, high);
+            quickSortHelper(books, low, pi - 1);
+            quickSortHelper(books, pi + 1, high);
         }
+    }
+
+    private static int partition(ArrayList<Book> books, int low, int high) {
+        Book pivot = books.get(high);
+        int i = low - 1;
+
+        for (int j = low; j < high; j++) {
+            if (books.get(j).getTitle().compareToIgnoreCase(pivot.getTitle()) <= 0) {
+                i++;
+                swap(books, i, j);
+            }
+        }
+
+        swap(books, i + 1, high);
+        return i + 1;
+    }
+
+    private static void swap(ArrayList<Book> books, int i, int j) {
+        Book temp = books.get(i);
+        books.set(i, books.get(j));
+        books.set(j, temp);
     }
 }

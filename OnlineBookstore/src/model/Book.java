@@ -23,6 +23,12 @@ public class Book {
         return quantity;
     }
 
+    // ✅ Thêm setter để cập nhật số lượng
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    @Override
     public String toString() {
         return title + " by " + author + " (Qty: " + quantity + ")";
     }

@@ -1,11 +1,11 @@
 package datastructures;
 
-public class MyQueue<T> {
+public class MyQueue<E> {
     private final Object[] data;
+    private final int capacity;
     private int front;
     private int rear;
     private int size;
-    private final int capacity;
 
     public MyQueue(int capacity) {
         this.capacity = capacity;
@@ -15,7 +15,8 @@ public class MyQueue<T> {
         size = 0;
     }
 
-    public void enqueue(T item) {
+    // ✅  offer
+    public void offer(E item) {
         if (size == capacity) {
             System.out.println("Queue is full.");
             return;
@@ -25,10 +26,12 @@ public class MyQueue<T> {
         size++;
     }
 
+    // ✅  poll (lấy và xóa phần tử đầu)
     @SuppressWarnings("unchecked")
-    public T dequeue() {
+    public E poll() {
         if (isEmpty()) return null;
-        T item = (T) data[front];
+        E item = (E) data[front];
+        data[front] = null; // optional: clear reference
         front = (front + 1) % capacity;
         size--;
         return item;
@@ -36,5 +39,9 @@ public class MyQueue<T> {
 
     public boolean isEmpty() {
         return size == 0;
+    }
+
+    public int size() {
+        return size;
     }
 }

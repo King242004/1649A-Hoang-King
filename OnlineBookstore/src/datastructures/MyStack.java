@@ -1,6 +1,6 @@
 package datastructures;
 
-public class MyStack<T> {
+public class MyStack<E> {
     private final Object[] data;
     private int top;
 
@@ -9,7 +9,7 @@ public class MyStack<T> {
         top = -1;
     }
 
-    public void push(T item) {
+    public void push(E item) {
         if (top == data.length - 1) {
             System.out.println("Stack is full.");
             return;
@@ -18,18 +18,23 @@ public class MyStack<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public T pop() {
+    public E pop() {
         if (isEmpty()) return null;
-        return (T) data[top--];
+        return (E) data[top--];
     }
 
     @SuppressWarnings("unchecked")
-    public T peek() {
+    public E peek() {
         if (isEmpty()) return null;
-        return (T) data[top];
+        return (E) data[top];
     }
 
     public boolean isEmpty() {
         return top == -1;
+    }
+
+    // (Tùy chọn) thêm size() nếu cần
+    public int size() {
+        return top + 1;
     }
 }

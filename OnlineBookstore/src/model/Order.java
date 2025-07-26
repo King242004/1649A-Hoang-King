@@ -1,18 +1,17 @@
 package model;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Order {
     private static int nextOrderId = 1;
 
     private final int orderId;
     private final String customerName;
-    private final List<Book> books;
+    private final ArrayList<Book> books;
 
     public Order(Customer customer) {
         this.orderId = nextOrderId++;
-        this.customerName = customer.getName(); // cần phương thức getName() trong Customer
+        this.customerName = customer.getName();
         this.books = new ArrayList<>();
     }
 
@@ -20,7 +19,7 @@ public class Order {
         books.add(book);
     }
 
-    public List<Book> getBooks() {
+    public ArrayList<Book> getBooks() {
         return books;
     }
 

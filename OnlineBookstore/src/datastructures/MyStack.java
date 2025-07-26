@@ -1,40 +1,54 @@
 package datastructures;
 
 public class MyStack<E> {
-    private final Object[] data;
-    private int top;
 
-    public MyStack(int capacity) {
-        data = new Object[capacity];
-        top = -1;
-    }
+    // ✅ Node nội bộ
+    private static class Node<E> {
+        E data;
+        Node<E> next;
 
-    public void push(E item) {
-        if (top == data.length - 1) {
-            System.out.println("Stack is full.");
-            return;
+        Node(E data) {
+            this.data = data;
+            this.next = null;
         }
-        data[++top] = item;
     }
 
-    @SuppressWarnings("unchecked")
+    private Node<E> top; // đỉnh stack (LIFO)
+    private int size;
+
+    public MyStack() {
+        top = null;
+        size = 0;
+    }
+
+    // ✅ push: thêm phần tử vào đầu stack
+    public void push(E item) {
+        Node<E> newNode = new Node<>(item);
+        newNode.next = top;
+        top = newNode;
+        size++;
+    }
+
+    // ✅ pop: lấy và xóa phần tử đầu stack
     public E pop() {
         if (isEmpty()) return null;
-        return (E) data[top--];
+        E item = top.data;
+        top = top.next;
+        size--;
+        return item;
     }
 
-    @SuppressWarnings("unchecked")
+    // ✅ peek: chỉ lấy phần tử đầu stack, không xóa
     public E peek() {
         if (isEmpty()) return null;
-        return (E) data[top];
+        return top.data;
     }
 
     public boolean isEmpty() {
-        return top == -1;
+        return top == null;
     }
 
-    // (Tùy chọn) thêm size() nếu cần
     public int size() {
-        return top + 1;
+        return size;
     }
 }

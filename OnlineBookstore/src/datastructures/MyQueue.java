@@ -1,44 +1,50 @@
 package datastructures;
 
 public class MyQueue<E> {
-    private final Object[] data;
-    private final int capacity;
-    private int front;
-    private int rear;
+    private static class Node<E> {
+        E data;
+        Node<E> next;
+
+        Node(E data) {
+            this.data = data;
+            this.next = null;
+        }
+    }
+
+    private Node<E> front;  // Điểm đầu của hàng đợi
+    private Node<E> rear;   // Điểm cuối của hàng đợi
     private int size;
 
-    public MyQueue(int capacity) {
-        this.capacity = capacity;
-        data = new Object[capacity];
-        front = 0;
-        rear = -1;
+    public MyQueue() {
+        front = rear = null;
         size = 0;
     }
 
-    // ✅  offer
+    // ✅ offer: thêm phần tử vào cuối hàng đợi
     public void offer(E item) {
-        if (size == capacity) {
-            System.out.println("Queue is full.");
-            return;
+        Node<E> newNode = new Node<>(item);
+        if (rear == null) {
+            front = rear = newNode;
+        } else {
+            rear.next = newNode;
+            rear = newNode;
         }
-        rear = (rear + 1) % capacity;
-        data[rear] = item;
         size++;
     }
 
-    // ✅  poll (lấy và xóa phần tử đầu)
-    @SuppressWarnings("unchecked")
+    // ✅ poll: lấy và xóa phần tử ở đầu hàng đợi
     public E poll() {
         if (isEmpty()) return null;
-        E item = (E) data[front];
-        data[front] = null; // optional: clear reference
-        front = (front + 1) % capacity;
+        E item = front.data;
+        front = front.next;
+        if (front == null) rear = null; // Nếu hàng trống sau khi lấy
         size--;
         return item;
     }
 
+    // ✅ kiểm tra rỗng
     public boolean isEmpty() {
-        return size == 0;
+        return front == null;
     }
 
     public int size() {

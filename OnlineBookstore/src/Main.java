@@ -13,12 +13,9 @@ import search.OrderSearch;
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        MyQueue<Order> queue = new MyQueue<>(10);
-        MyStack<Order> stack = new MyStack<>(10);
-        Order[] completedOrders = new Order[10];
-        int completedCount = 0;
-
-        // ✅ Biến theo dõi các Order ID đã sort
+        MyQueue<Order> queue = new MyQueue<>();
+        MyStack<Order> stack = new MyStack<>();
+        ArrayList<Order> completedOrders = new ArrayList<>();
         HashSet<Integer> sortedOrderIds = new HashSet<>();
 
         ArrayList<Book> libraryBooks = new ArrayList<>();
@@ -44,7 +41,7 @@ public class Main {
                 "OpenGL Programming Guide", "Graphics Programming in Java", "3D Math Primer"
         };
         for (String title : titles) {
-            libraryBooks.add(new Book(title, "Various Authors", 5 + (int)(Math.random() * 6)));
+            libraryBooks.add(new Book(title, "Various Authors", 5 + (int) (Math.random() * 6)));
         }
 
         boolean running = true;
@@ -57,8 +54,9 @@ public class Main {
             System.out.println("3. Pop Last Processed Order");
             System.out.println("4. Search Order by ID");
             System.out.println("5. View Available Stock");
-            System.out.println("6. Exit");
-            System.out.print("Enter your choice (1–6): ");
+            System.out.println("6. View Processed and Unprocessed Orders");
+            System.out.println("7. Exit");
+            System.out.print("Enter your choice (1–7): ");
 
             int choice = scanner.nextInt();
             scanner.nextLine();
@@ -77,137 +75,98 @@ public class Main {
                         System.out.print("Enter phone number: ");
                         phone = scanner.nextLine();
                         if (phone.matches("\\d+")) break;
-                        System.out.println("❌ Phone number must contain digits only. Please try again.");
+                        System.out.println("❌ Phone number must contain digits only.");
                     }
 
                     System.out.print("Enter email: ");
                     String email = scanner.nextLine();
 
                     Customer customer = new Customer(name, address, phone, email);
-
-                    System.out.print("How many books in this order? ");
+                    System.out.print("How many books in this order? (1–5): ");
                     int numBooks = scanner.nextInt();
                     scanner.nextLine();
 
-                    if (numBooks <= 0 || numBooks > 5) {
-                        System.out.println("❌ You must order between 1 and 5 books. Order cancelled.");
+                    if (numBooks < 1 || numBooks > 5) {
+                        System.out.println("❌ Invalid number of books.");
                         break;
                     }
 
                     Order newOrder = new Order(customer);
-
                     for (int i = 0; i < numBooks; i++) {
-                        System.out.println("Book #" + (i + 1));
-
-                        String useLibrary;
-                        while (true) {
-                            System.out.print("Use book from library? (y/n): ");
-                            useLibrary = scanner.nextLine().trim().toLowerCase();
-                            if (useLibrary.equals("y") || useLibrary.equals("n")) break;
-                            System.out.println("❌ Invalid input. Please enter only 'y' or 'n'.");
+                        System.out.println("\nBook #" + (i + 1));
+                        System.out.println("📚 Available books:");
+                        for (int j = 0; j < libraryBooks.size(); j++) {
+                            System.out.println((j + 1) + ". " + libraryBooks.get(j));
                         }
 
-                        Book book;
+                        System.out.print("Choose book number: ");
+                        int index = scanner.nextInt() - 1;
+                        scanner.nextLine();
 
-                        if (useLibrary.equals("y")) {
-                            System.out.println("📚 Available books:");
-                            for (int j = 0; j < libraryBooks.size(); j++) {
-                                System.out.println((j + 1) + ". " + libraryBooks.get(j));
-                            }
+                        if (index >= 0 && index < libraryBooks.size()) {
+                            Book libBook = libraryBooks.get(index);
 
-                            System.out.print("Choose book number: ");
-                            int index = scanner.nextInt() - 1;
+                            System.out.print("Enter quantity: ");
+                            int qty = scanner.nextInt();
                             scanner.nextLine();
 
-                            if (index >= 0 && index < libraryBooks.size()) {
-                                Book libBook = libraryBooks.get(index);
-
-                                System.out.print("Enter quantity: ");
-                                int qty = scanner.nextInt();
-                                scanner.nextLine();
-
-                                if (qty > libBook.getQuantity()) {
-                                    System.out.println("❌ Not enough stock. Only " + libBook.getQuantity() + " available. Skipping.");
-                                    continue;
-                                }
-
-                                libBook.setQuantity(libBook.getQuantity() - qty);
-                                book = new Book(libBook.getTitle(), libBook.getAuthor(), qty);
-                            } else {
-                                System.out.println("❌ Invalid book selection. Skipping.");
+                            if (qty > libBook.getQuantity()) {
+                                System.out.println("❌ Not enough stock.");
                                 continue;
                             }
 
+                            libBook.setQuantity(libBook.getQuantity() - qty);
+                            Book book = new Book(libBook.getTitle(), libBook.getAuthor(), qty);
+                            newOrder.addBook(book);
                         } else {
-                            System.out.print("  Title: ");
-                            String title = scanner.nextLine();
-                            System.out.print("  Author: ");
-                            String author = scanner.nextLine();
-                            System.out.print("  Quantity: ");
-                            int qty = scanner.nextInt();
-                            scanner.nextLine();
-                            book = new Book(title, author, qty);
+                            System.out.println("❌ Invalid selection.");
                         }
-
-                        newOrder.addBook(book);
                     }
 
                     queue.offer(newOrder);
-                    System.out.println("✅ Order placed successfully!");
+                    System.out.println("✅ Order placed successfully.");
                     break;
 
                 case 2:
-                    System.out.println("\n⚙️ === CASE 2: Sort Books in Specific Order by ID ===");
+                    System.out.println("\n⚙️ === CASE 2: Sort Next Unsorted Order in Queue ===");
 
                     if (queue.isEmpty()) {
                         System.out.println("⚠️ Queue is empty.");
                         break;
                     }
 
-                    System.out.print("Enter Order ID to sort books: ");
-                    int targetId = scanner.nextInt();
-                    scanner.nextLine();
+                    boolean sorted = false;
+                    int size = queue.size();
 
-                    if (sortedOrderIds.contains(targetId)) {
-                        System.out.println("⚠️ Order ID " + targetId + " has already been sorted.");
-                        break;
-                    }
+                    for (int i = 0; i < size; i++) {
+                        Order order = queue.poll();
 
-                    boolean orderFound = false;
-                    int queueSize = queue.size();
+                        if (!sortedOrderIds.contains(order.getOrderId()) && !sorted) {
+                            System.out.println("🔎 Sorting Order ID: " + order.getOrderId() +
+                                    ", Customer: " + order.getCustomerName());
 
-                    for (int i = 0; i < queueSize; i++) {
-                        Order currentOrder = queue.poll();
+                            System.out.println("📚 Before sort:");
+                            for (Book b : order.getBooks()) System.out.println("   - " + b);
 
-                        if (currentOrder.getOrderId() == targetId) {
-                            orderFound = true;
+                            Sorting.quickSort(order.getBooks());
 
-                            System.out.println("👤 Customer: " + currentOrder.getCustomerName());
+                            System.out.println("✅ After sort:");
+                            for (Book b : order.getBooks()) System.out.println("   - " + b);
 
-                            System.out.println("🔎 Before sorting:");
-                            for (Book book : currentOrder.getBooks()) {
-                                System.out.println(book);
-                            }
-
-                            Sorting.quickSort((ArrayList<Book>) currentOrder.getBooks());
-
-                            System.out.println("✅ After sorting:");
-                            for (Book book : currentOrder.getBooks()) {
-                                System.out.println(book);
-                            }
-
-                            stack.push(currentOrder);
-                            completedOrders[completedCount++] = currentOrder;
-                            sortedOrderIds.add(targetId);
+                            stack.push(order);
+                            completedOrders.add(order);
+                            sortedOrderIds.add(order.getOrderId());
 
                             System.out.println("📥 Order pushed to stack.");
+                            sorted = true;
+                        } else {
+                            // vẫn cần đẩy order lại vào queue nếu chưa được xử lý lần này
+                            queue.offer(order);
                         }
-
-                        queue.offer(currentOrder);
                     }
 
-                    if (!orderFound) {
-                        System.out.println("❌ Order with ID " + targetId + " not found in the queue.");
+                    if (!sorted) {
+                        System.out.println("✅ All orders have already been sorted.");
                     }
 
                     break;
@@ -216,8 +175,7 @@ public class Main {
                     System.out.println("\n📤 === CASE 3: Pop Last Processed Order ===");
                     if (!stack.isEmpty()) {
                         Order popped = stack.pop();
-                        System.out.println("📤 Order popped from stack:");
-                        System.out.println(popped);
+                        System.out.println("📤 Popped Order: " + popped);
                     } else {
                         System.out.println("⚠️ Stack is empty.");
                     }
@@ -225,18 +183,16 @@ public class Main {
 
                 case 4:
                     System.out.println("\n🔍 === CASE 4: Search Order by ID ===");
-                    System.out.print("Enter order ID to search: ");
+                    System.out.print("Enter Order ID to search: ");
                     int searchId = scanner.nextInt();
                     scanner.nextLine();
 
-                    Order found = OrderSearch.searchById(completedOrders, completedCount, searchId);
-                    if (found != null) {
-                        System.out.println("📦 Order found:");
-                        System.out.println(found);
-
-                        System.out.println("📚 Books in this order:");
-                        for (Book book : found.getBooks()) {
-                            System.out.println(" - " + book);
+                    Order result = OrderSearch.searchById(completedOrders, searchId);
+                    if (result != null) {
+                        System.out.println("📦 Order found: " + result);
+                        System.out.println("📚 Books:");
+                        for (Book b : result.getBooks()) {
+                            System.out.println(" - " + b.getTitle() + " by " + b.getAuthor() + " (Qty: " + b.getQuantity() + ")");
                         }
                     } else {
                         System.out.println("❌ Order not found.");
@@ -245,20 +201,53 @@ public class Main {
 
                 case 5:
                     System.out.println("\n📚 === CASE 5: Available Stock ===");
-                    int index = 1;
-                    for (Book book : libraryBooks) {
-                        System.out.println(index++ + ". " + book);
+                    int count = 1;
+                    for (Book b : libraryBooks) {
+                        System.out.println((count++) + ". " + b);
                     }
                     break;
 
-
                 case 6:
-                    System.out.println("\n👋 === Exiting program ===");
+                    System.out.println("\n📊 === CASE 6: View Processed and Unprocessed Orders ===");
+
+                    System.out.println("🔄 Unprocessed Orders:");
+                    if (queue.isEmpty()) {
+                        System.out.println("(None)");
+                    } else {
+                        MyQueue<Order> temp = new MyQueue<>();
+                        while (!queue.isEmpty()) {
+                            Order order = queue.poll();
+                            System.out.println("- Order ID: " + order.getOrderId() + ", Customer: " + order.getCustomerName());
+                            for (Book book : order.getBooks()) {
+                                System.out.println("   + " + book.getTitle() + " by " + book.getAuthor() + " (Qty: " + book.getQuantity() + ")");
+                            }
+                            temp.offer(order);
+                        }
+                        while (!temp.isEmpty()) {
+                            queue.offer(temp.poll());
+                        }
+                    }
+
+                    System.out.println("\n✅ Processed Orders:");
+                    if (completedOrders.isEmpty()) {
+                        System.out.println("(None)");
+                    } else {
+                        for (Order order : completedOrders) {
+                            System.out.println("- Order ID: " + order.getOrderId() + ", Customer: " + order.getCustomerName());
+                            for (Book book : order.getBooks()) {
+                                System.out.println("   + " + book.getTitle() + " by " + book.getAuthor() + " (Qty: " + book.getQuantity() + ")");
+                            }
+                        }
+                    }
+                    break;
+
+                case 7:
+                    System.out.println("\n👋 Exiting program.");
                     running = false;
                     break;
 
                 default:
-                    System.out.println("❗ Invalid choice. Please select from 1 to 6.");
+                    System.out.println("❗ Invalid choice.");
             }
         }
 

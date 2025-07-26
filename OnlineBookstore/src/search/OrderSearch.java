@@ -1,12 +1,13 @@
 package search;
 
 import model.Order;
+import java.util.List;
 
 public class OrderSearch {
-    public static Order searchById(Order[] orders, int count, int id) {
-        for (int i = 0; i < count; i++) {
-            if (orders[i].getOrderId() == id) {
-                return orders[i];
+    public static Order searchById(List<Order> orders, int id) {
+        for (Order order : orders) {
+            if (order.getOrderId() == id) {
+                return order;
             }
         }
         return null;

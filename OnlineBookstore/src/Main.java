@@ -1,5 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashSet;
+import datastructures.ArrayListADT;
 import java.util.Scanner;
 
 import model.Customer;
@@ -11,14 +10,36 @@ import datastructures.Sorting;
 import search.OrderSearch;
 
 public class Main {
+
+    public static boolean isDigitsOnly(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) < '0' || s.charAt(i) > '9') return false;
+        }
+        return true;
+    }
+
+    public static int simpleRandom(int min, int max) {
+        long seed = System.nanoTime();
+        seed = (seed * 9301 + 49297) % 233280;
+        double rnd = seed / 233280.0;
+        return min + (int)(rnd * (max - min + 1));
+    }
+
+    public static boolean contains(ArrayListADT<Integer> list, int value) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i) == value) return true;
+        }
+        return false;
+    }
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         MyQueue<Order> queue = new MyQueue<>();
         MyStack<Order> stack = new MyStack<>();
-        ArrayList<Order> completedOrders = new ArrayList<>();
-        HashSet<Integer> sortedOrderIds = new HashSet<>();
+        ArrayListADT<Order> completedOrders = new ArrayListADT<>();
+        ArrayListADT<Integer> sortedOrderIds = new ArrayListADT<>();
 
-        ArrayList<Book> libraryBooks = new ArrayList<>();
+        ArrayListADT<Book> libraryBooks = new ArrayListADT<>();
         String[] titles = {
                 "Refactoring", "Clean Architecture", "Cracking the Coding Interview", "You Don't Know JS",
                 "Grokking Algorithms", "Effective Java", "Design Patterns", "Java Concurrency in Practice",
@@ -40,12 +61,12 @@ public class Main {
                 "CompTIA Security+ Guide", "Game Programming Patterns", "Unity in Action", "Unreal Engine Essentials",
                 "OpenGL Programming Guide", "Graphics Programming in Java", "3D Math Primer"
         };
+
         for (String title : titles) {
-            libraryBooks.add(new Book(title, "Various Authors", 5 + (int) (Math.random() * 6)));
+            libraryBooks.add(new Book(title, "Various Authors", simpleRandom(5, 10)));
         }
 
         boolean running = true;
-
         while (running) {
             System.out.println("\n---------------------------------------");
             System.out.println("===== ONLINE BOOKSTORE MENU =====");
@@ -74,12 +95,17 @@ public class Main {
                     while (true) {
                         System.out.print("Enter phone number: ");
                         phone = scanner.nextLine();
-                        if (phone.matches("\\d+")) break;
+                        if (isDigitsOnly(phone)) break;
                         System.out.println("❌ Phone number must contain digits only.");
                     }
 
-                    System.out.print("Enter email: ");
-                    String email = scanner.nextLine();
+                    String email;
+                    while (true) {
+                        System.out.print("Enter email: ");
+                        email = scanner.nextLine();
+                        if (email.endsWith("@gmail.com")) break;
+                        System.out.println("❌ Email must end with '@gmail.com'. Please try again.");
+                    }
 
                     Customer customer = new Customer(name, address, phone, email);
                     System.out.print("How many books in this order? (1–5): ");
@@ -95,8 +121,9 @@ public class Main {
                     for (int i = 0; i < numBooks; i++) {
                         System.out.println("\nBook #" + (i + 1));
                         System.out.println("📚 Available books:");
-                        for (int j = 0; j < libraryBooks.size(); j++) {
-                            System.out.println((j + 1) + ". " + libraryBooks.get(j));
+                        int count = 1;
+                        for (Book book : libraryBooks) {
+                            System.out.println((count++) + ". " + book);
                         }
 
                         System.out.print("Choose book number: ");
@@ -141,26 +168,29 @@ public class Main {
                     for (int i = 0; i < size; i++) {
                         Order order = queue.poll();
 
-                        if (!sortedOrderIds.contains(order.getOrderId()) && !sorted) {
+                        if (!contains(sortedOrderIds, order.getOrderId()) && !sorted) {
                             System.out.println("🔎 Sorting Order ID: " + order.getOrderId() +
                                     ", Customer: " + order.getCustomerName());
 
                             System.out.println("📚 Before sort:");
-                            for (Book b : order.getBooks()) System.out.println("   - " + b);
+                            ArrayListADT<Book> books = order.getBooks();
+                            for (Book book : books) {
+                                System.out.println("   - " + book);
+                            }
 
-                            Sorting.quickSort(order.getBooks());
+                            Sorting.quickSort(books);
 
                             System.out.println("✅ After sort:");
-                            for (Book b : order.getBooks()) System.out.println("   - " + b);
+                            for (Book book : books) {
+                                System.out.println("   - " + book);
+                            }
 
                             stack.push(order);
                             completedOrders.add(order);
                             sortedOrderIds.add(order.getOrderId());
-
                             System.out.println("📥 Order pushed to stack.");
                             sorted = true;
                         } else {
-                            // vẫn cần đẩy order lại vào queue nếu chưa được xử lý lần này
                             queue.offer(order);
                         }
                     }
@@ -168,7 +198,6 @@ public class Main {
                     if (!sorted) {
                         System.out.println("✅ All orders have already been sorted.");
                     }
-
                     break;
 
                 case 3:
@@ -176,10 +205,13 @@ public class Main {
                     if (!stack.isEmpty()) {
                         Order popped = stack.pop();
                         System.out.println("📤 Popped Order: " + popped);
+                        System.out.println("📚 Books in this order:");
+                        for (Book book : popped.getBooks()) {
+                            System.out.println(" - " + book.getTitle() + " by " + book.getAuthor() + " (Qty: " + book.getQuantity() + ")");
+                        }
                     } else {
                         System.out.println("⚠️ Stack is empty.");
                     }
-                    break;
 
                 case 4:
                     System.out.println("\n🔍 === CASE 4: Search Order by ID ===");
@@ -190,7 +222,6 @@ public class Main {
                     Order result = OrderSearch.searchById(completedOrders, searchId);
                     if (result != null) {
                         System.out.println("📦 Order found: " + result);
-                        System.out.println("📚 Books:");
                         for (Book b : result.getBooks()) {
                             System.out.println(" - " + b.getTitle() + " by " + b.getAuthor() + " (Qty: " + b.getQuantity() + ")");
                         }
@@ -201,9 +232,9 @@ public class Main {
 
                 case 5:
                     System.out.println("\n📚 === CASE 5: Available Stock ===");
-                    int count = 1;
-                    for (Book b : libraryBooks) {
-                        System.out.println((count++) + ". " + b);
+                    int idx = 1;
+                    for (Book book : libraryBooks) {
+                        System.out.println((idx++) + ". " + book);
                     }
                     break;
 
@@ -229,7 +260,7 @@ public class Main {
                     }
 
                     System.out.println("\n✅ Processed Orders:");
-                    if (completedOrders.isEmpty()) {
+                    if (completedOrders.size() == 0) {
                         System.out.println("(None)");
                     } else {
                         for (Order order : completedOrders) {

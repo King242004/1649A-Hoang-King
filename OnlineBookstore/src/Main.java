@@ -260,7 +260,7 @@ public class Main {
                     }
 
                     System.out.println("\n✅ Processed Orders:");
-                    if (completedOrders.size() == 0) {
+                    if (completedOrders.isEmpty()) {
                         System.out.println("(None)");
                     } else {
                         for (Order order : completedOrders) {
